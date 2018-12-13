@@ -6,10 +6,10 @@
  * this is final code of 4 switched and one dimmer proper working 
  * AND WITH MANUAL SWITCH
  */
-
+//Note: this code is for positive pwm cycle
 #include <stdio.h>
 #include <stdlib.h>
-
+#define DEBUG
 // 'C' source line config statements
 
 // CONFIG1
@@ -80,6 +80,8 @@
 
 
 // Conditional compilation
+
+
 //#define DEBUG
 //#define RELEASE
 #define SWITCH_1_RELAY
@@ -94,8 +96,8 @@
 #define SWITCH_4_RELAY
 //#define SWITCH_4_DIMMER
 
-#define SWITCH_5_RELAY
-//#define SWITCH_5_DIMMER
+//#define SWITCH_5_RELAY
+#define SWITCH_5_DIMMER
 
 // ALL error Definitions
 /* 
@@ -155,7 +157,8 @@ interrupt void isr(){
      if(PIE3bits.TMR3IE==1 && PIR3bits.TMR3IF==1)
     {           
         PIR3bits.TMR3IF=0;
-        OUTPUT_DIMMER = TRUE;
+       // OUTPUT_DIMMER = TRUE;
+         OUTPUT_DIMMER = FALSE;//for rgb
         T3CONbits.TMR3ON=0;
        // TX1REG='Q';
     }    
@@ -166,11 +169,13 @@ interrupt void isr(){
     {
         PIR1bits.TMR1IF=0;
         //TX1REG='T';        
-        OUTPUT_DIMMER = FALSE;            
+      //  OUTPUT_DIMMER = FALSE;   
+        OUTPUT_DIMMER = TRUE;
         TMR3H=0xFF;
         TMR3L=0xD8;
         T3CONbits.TMR3ON = 1;
-        T1CONbits.TMR1ON = 0;        
+        T1CONbits.TMR1ON = 0; 
+        
     }
     //*************************ZCD INTERRRUPT****************************//
     
@@ -787,9 +792,8 @@ interrupt void isr(){
             errorsISR(ErrorNames); 
         } 
         mainReceivedDataBuffer[mainReceivedDataPosition]=RC1REG;
-        #ifdef DEBUG
-        TX1REG=mainReceivedDataBuffer[mainReceivedDataPosition];
-        #endif
+
+
         if(mainReceivedDataBuffer[0]=='%'){
             mainReceivedDataPosition++;
             if(mainReceivedDataPosition>15){
@@ -819,7 +823,7 @@ interrupt void isr(){
 int main() {
  
         M1=ON;    M2=ON;     M3=ON;    M4=ON;     M5=ON;
-        OUTPUT_RELAY1 = OFF; OUTPUT_RELAY2 = OFF; OUTPUT_RELAY3 = OFF; OUTPUT_RELAY4 = OFF;OUTPUT_DIMMER = ON;
+        OUTPUT_RELAY1 = OFF; OUTPUT_RELAY2 = OFF; OUTPUT_RELAY3 = OFF; OUTPUT_RELAY4 = OFF;OUTPUT_DIMMER = OFF;
     GPIO_pin_Initialize();
     allPeripheralInit();
 
@@ -977,6 +981,7 @@ int main() {
             M4=1;
             
         }
+     
         //on condtion
         if(parentalLockBuffer[4] == CHAR_OFF && INPUTSWITCH4 == ON && M4 == ON)
         {
@@ -1006,12 +1011,14 @@ int main() {
             TX1REG = '0';__delay_ms(1);
             TX1REG = '0';__delay_ms(1);
             TX1REG = '5';__delay_ms(1);
-            OUTPUT_DIMMER=ON;
+           // OUTPUT_DIMMER=ON;
+            OUTPUT_DIMMER=OFF;//for rgb
             }
             man=0;
             M5=1;
            
         }
+
         //on condtion
         if(parentalLockBuffer[5] == CHAR_OFF && INPUTSWITCH5 == ON && M5 == ON)
         {
@@ -1023,7 +1030,8 @@ int main() {
             TX1REG = '1';__delay_ms(1);
             TX1REG = '0';__delay_ms(1);
             TX1REG = '5';__delay_ms(1);
-            OUTPUT_DIMMER=OFF;
+           // OUTPUT_DIMMER=OFF;
+            OUTPUT_DIMMER=ON;//for rgb
             }
             man=0;
             M5=0;
@@ -1167,6 +1175,7 @@ void applianceControl(char charSwitchMSB, char charSwitchLSB, char charSwitchSTA
 #endif
         }
             break;
+#ifdef SWITCH_5_RELAY
         case 5:
         {
 //            TX1REG='5';
@@ -1183,6 +1192,26 @@ void applianceControl(char charSwitchMSB, char charSwitchLSB, char charSwitchSTA
             }
         }
             break;
+#endif
+#ifdef SWITCH_5_DIMMER
+        case 5:
+        {
+               start_PWM_Generation_in_ISR_FLAG = integerSwitchState;
+               switch(integerSwitchState){
+                case 0:
+                   // OUTPUT_DIMMER=1;  // For Triac --> inverted condition for off
+                    OUTPUT_DIMMER=0;//for rgb
+                    break;
+                case 1:
+                    levelofDimmer_MSB = chDimmerSpeedMSB;
+                    levelofDimmer_LSB = chDimmerSpeedLSB;
+                    break;
+                default:
+                    break;
+               }
+        }
+        break;
+#endif            
         default:
             break;
         }
@@ -1332,7 +1361,7 @@ void CCP9_Initialize(){
     // Set the CCP1 to the options selected in the User Interface
 
     // MODE Every edge; EN enabled; FMT right_aligned;
-    CCP9CON = 0x84;
+    CCP9CON = 0x04;
 
     // RH 0;
     CCPR9H = 0x00;
@@ -1433,5 +1462,5 @@ void clearAllPorts(){
     OUTPUT_RELAY2=0;
     OUTPUT_RELAY3=0;
     OUTPUT_RELAY4=0;
-    OUTPUT_DIMMER=1;
+    OUTPUT_DIMMER=0;
 }
