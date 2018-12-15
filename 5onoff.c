@@ -1011,8 +1011,8 @@ int main() {
             TX1REG = '0';__delay_ms(1);
             TX1REG = '0';__delay_ms(1);
             TX1REG = '5';__delay_ms(1);
-           // OUTPUT_DIMMER=ON;
-            OUTPUT_DIMMER=OFF;//for rgb
+            OUTPUT_DIMMER=ON;
+          
             }
             man=0;
             M5=1;
@@ -1030,9 +1030,8 @@ int main() {
             TX1REG = '1';__delay_ms(1);
             TX1REG = '0';__delay_ms(1);
             TX1REG = '5';__delay_ms(1);
-           // OUTPUT_DIMMER=OFF;
-            OUTPUT_DIMMER=ON;//for rgb
-            }
+            OUTPUT_DIMMER=OFF;
+                      }
             man=0;
             M5=0;
            
@@ -1462,5 +1461,5 @@ void clearAllPorts(){
     OUTPUT_RELAY2=0;
     OUTPUT_RELAY3=0;
     OUTPUT_RELAY4=0;
-    OUTPUT_DIMMER=0;
+    OUTPUT_DIMMER=1;
 }
